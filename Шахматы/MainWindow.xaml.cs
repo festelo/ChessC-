@@ -25,7 +25,8 @@ namespace Шахматы
     {
         public static GameLogic gl = null;
         chess ch = null;
-        public List<figure> figlist = new List<figure>();
+        //public List<figure> figlist = new List<figure>();
+        public figure[,] figPosAr = new figure[9,9]; 
 
         public GameLogic(Grid gr)
         {
@@ -36,12 +37,62 @@ namespace Шахматы
         {
             e.Data.GetFormats();
             int[] coord = new int[] { Grid.GetColumn((UIElement)sender), Grid.GetRow((UIElement)sender) };
-            figure fig = (figure)e.Data.GetData("Шахматы.figure");
-            if(checkMove(fig,coord)) ch.setPos(fig, coord);
-            if (true)
+            try
             {
-                fig.dead = true;
-                fig.Visibility = Visibility.Hidden;
+                string codekey = (string)e.Data.GetData(DataFormats.Text);
+                figure newFigure = null;
+                switch (codekey[1])
+                {
+                    case 'Q':
+                        {
+                            if (codekey[0] == 'B') newFigure = new figure(chess.black.imgs.queen, "queen", false);
+                            else if (codekey[0] == 'W') newFigure = new figure(chess.white.imgs.queen, "queen", true);
+                            break;
+                        }
+                    case 'C':
+                        {
+                            if (codekey[0] == 'B') newFigure = new figure(chess.black.imgs.castle, "castle", false);
+                            else if (codekey[0] == 'W') newFigure = new figure(chess.white.imgs.castle, "castle", true);
+                            break;
+                        }
+                    case 'K':
+                        {
+                            if (codekey[0] == 'B') newFigure = new figure(chess.black.imgs.knight, "knight", false);
+                            else if (codekey[0] == 'W') newFigure = new figure(chess.white.imgs.knight, "knight", true);
+                            break;
+                        }
+                    case 'P':
+                        {
+                            if (codekey[0] == 'B') newFigure = new figure(chess.black.imgs.pawn, "pawn", false);
+                            else if (codekey[0] == 'W') newFigure = new figure(chess.white.imgs.pawn, "pawn", true);
+                            break;
+                        }
+                    case 'B':
+                        {
+                            if (codekey[0] == 'B') newFigure = new figure(chess.black.imgs.bishop, "bishop", false);
+                            else if (codekey[0] == 'W') newFigure = new figure(chess.white.imgs.bishop, "bishop", true);
+                            break;
+                        }
+                    default:
+                        return;
+                }
+                ch.setPos(newFigure, coord, false);
+            }
+            catch
+            {
+                figure fig = (figure)e.Data.GetData("Шахматы.figure");
+                if (checkMove(fig, coord))
+                {
+                    try
+                    {
+                        figPosAr[coord[0], coord[1]] = null;
+                        //figlist.Remove((figure)sender);
+                        ((figure)sender).dead = true;
+                        ((figure)sender).Visibility = Visibility.Hidden;
+                    }
+                    catch { }
+                    ch.setPos(fig, coord);
+                }
             }
             //Image img = (Image)e.Data.GetData(forma);
             //Grid.SetColumn(img, Grid.GetColumn(rect));
@@ -52,21 +103,116 @@ namespace Шахматы
         {
             bool ok = false;
             int[] position = ch.getPos(fig);
+            if (position[0] == coord[0] && position[1] == coord[1]) return false;
             switch (fig.type)
             {
                 case "pawn":
                     switch (fig.color)
                     {
-                        case "white":
-                            if (coord[0] == position[0] && ch.getFigFromPos(coord) == null && coord[1] == position[1] - 1 || position[1] == 7 && coord[1] == position[1] - 2) ok = true;
-                            break;
+                        case true:
+                            {
+                                if (((coord[0] == position[0] - 1 || coord[0] == position[0] + 1) && coord[1] == position[1] - 1 && figPosAr[coord[0], coord[1]] != null && !figPosAr[coord[0], coord[1]].color) || (coord[0] == position[0] && figPosAr[coord[0], coord[1]] == null && coord[1] == position[1] - 1) || (position[1] == 7 && coord[1] == position[1] - 2)) ok = true;
+                                //if (((coord[0] == position[0] - 1 || coord[0] == position[0] + 1) && coord[1] == position[1] - 1 
+                                //    && figPosAr[coord[0], coord[1]] != null && !figPosAr[coord[0], coord[1]].color) 
+                                //    || (coord[0] == position[0] && figPosAr[coord[0], coord[1]] == null && coord[1] == position[1] - 1) || (position[1] == 7 && coord[1] == position[1] - 2)) ok = true;
+                                break;
+                            }
 
-                        case "black":
-                            if (coord[0] == position[0] && coord[1] == position[1] + 1 || position[1] == 2 && coord[1] == position[1] + 2) ok = true;
-                            break;
+                        case false:
+                            {
+                                if (((coord[0] == position[0] + 1 || coord[0] == position[0] - 1) && coord[1] == position[1] + 1 && figPosAr[coord[0], coord[1]] != null && figPosAr[coord[0], coord[1]].color) || (coord[0] == position[0] && figPosAr[coord[0], coord[1]] == null && coord[1] == position[1] + 1) || (position[1] == 2 && coord[1] == position[1] + 2)) ok = true;
+                                break;
+                            }
                     }
                     break;
-                    
+                case "bishop":
+                    {
+                        if ((coord[1]+coord[0]-position[0] != position[1] && coord[1] - coord[0] + position[0] != position[1]) ||(figPosAr[coord[0], coord[1]] != null && figPosAr[coord[0], coord[1]].color == fig.color)) break;
+                        int i = position[0];
+                        if (coord[0] > position[0])
+                        {
+                            if (coord[1] > position[1])
+                                for (int j = position[1]; j < 9; j++, i++)
+                                {
+                                    if (coord[0] == i && coord[1] == j) { ok = true; break; }
+                                    if (figPosAr[i, j] != null && figPosAr[i, j] != fig) { ok = false; break; }
+                                }
+                            else
+                                for (int j = position[1]; j > 0; j--, i++)
+                                {
+                                    if (coord[0] == i && coord[1] == j) { ok = true; break; }
+                                    if (figPosAr[i, j] != null && figPosAr[i, j] != fig) { ok = false; break; }
+                                }
+                        }
+                        else
+                        {
+                            if (coord[1] > position[1])
+                                for (int j = position[1]; j < 9; j++, i--)
+                                {
+                                    if (coord[0] == i && coord[1] == j) { ok = true; break; }
+                                    if (figPosAr[i, j] != null && figPosAr[i, j] != fig) { ok = false; break; }
+                                }
+                            else
+                                for (int j = position[1]; j > 0; j--, i--)
+                                {
+                                    if (coord[0] == i && coord[1] == j) { ok = true; break; }
+                                    if (figPosAr[i, j] != null && figPosAr[i, j] != fig) { ok = false; break; }
+                                }
+                        }
+                        break;
+                    }
+                case "knight":
+                    {
+                        if ((figPosAr[coord[0], coord[1]] == null
+                            || (figPosAr[coord[0], coord[1]] != null && figPosAr[coord[0], coord[1]].color != fig.color))
+                            && (((coord[0] == position[0] + 1 || coord[0] == position[0] - 1) && (coord[1] == position[1] + 2 || coord[1] == position[1] - 2))
+                            ||  ((coord[0] == position[0] + 2 || coord[0] == position[0] - 2) && (coord[1] == position[1] + 1 || coord[1] == position[1] - 1)))
+                            ) ok = true;
+                        break;
+                    }
+                case "castle":
+                    {
+                        if ((coord[1] != position[1] && coord[0] != position[0]) || (figPosAr[coord[0], coord[1]] != null && figPosAr[coord[0], coord[1]].color == fig.color)) break;
+                        if (coord[0] > position[0])
+                        {
+                            for (int j = position[0]; j < 9; j++)
+                            {
+                                if (coord[0] == j) { ok = true; break; }
+                                if (figPosAr[j, position[1]] != null && figPosAr[j, position[1]] != fig) { ok = false; break; }
+                            }
+                        }
+                        else if(coord[0] < position[0])
+                        {
+                            for (int j = position[0]; j > 0; j--)
+                            {
+                                if (coord[0] == j) { ok = true; break; }
+                                if (figPosAr[j, position[1]] != null && figPosAr[j, position[1]] != fig) { ok = false; break; }
+                            }
+                        }
+                        else if(coord[1] > position[1])
+                        {
+                            for (int j = position[1]; j < 9; j++)
+                            {
+                                if (coord[1] == j) { ok = true; break; }
+                                if (figPosAr[position[0], j] != null && figPosAr[position[0], j] != fig) { ok = false; break; }
+                            }
+                        }
+                        //if(coord[1] < position[1])
+                        else
+                        {
+                            for (int j = position[1]; j > 0; j--)
+                            {
+                                if (coord[1] == j) { ok = true; break; }
+                                if (figPosAr[position[0], j] != null && figPosAr[position[0], j] != fig) { ok = false; break; }
+                            }
+                        }
+                        break;
+                    }
+                case "queen":
+                    {
+
+                        break;
+                    }
             }
             return ok;
         }
@@ -78,17 +224,16 @@ namespace Шахматы
     public class figure : Image
     {
         GameLogic gl = null;
-        public int[] position = new int[2];
         public bool dead = false;
         public string type = null;
-        public string color = null;
+        public bool color = false;
 
-        public figure(BitmapImage img, string typ, string clr)
+        public figure(BitmapImage img, string typ, bool clr)
         {
             color = clr;
             type = typ;
             gl = GameLogic.gl;
-            gl.figlist.Add(this);
+            //gl.figlist.Add(this);
             MouseDown += Img_MouseDown;
             Height = 80;
             Width = 80;
@@ -218,16 +363,16 @@ namespace Шахматы
                 figure[] pawn = new figure[8];
                 for (int i = 0; i < 8; i++)
                 {
-                    pawn[i] = new figure(imgs.pawn, "pawn", "white");
+                    pawn[i] = new figure(imgs.pawn, "pawn", true);
                 }
                 return pawn;
             }
             static public figure[] pawn = pawnPrep();
-            static public figure[] bishop = { new figure(imgs.bishop, "bishop", "white"), new figure(imgs.bishop, "bishop", "white") };
-            static public figure[] knight = { new figure(imgs.knight, "knight", "white"), new figure(imgs.knight, "knight", "white") };
-            static public figure[] castle = { new figure(imgs.castle, "castle", "white"), new figure(imgs.castle, "castle", "white") };
-            static public figure queen = new figure(imgs.queen, "queen", "white");
-            static public figure king = new figure(imgs.king, "king", "white");
+            static public figure[] bishop = { new figure(imgs.bishop, "bishop", true), new figure(imgs.bishop, "bishop", true) };
+            static public figure[] knight = { new figure(imgs.knight, "knight", true), new figure(imgs.knight, "knight", true) };
+            static public figure[] castle = { new figure(imgs.castle, "castle", true), new figure(imgs.castle, "castle", true) };
+            static public figure queen = new figure(imgs.queen, "queen", true);
+            static public figure king = new figure(imgs.king, "king", true);
         }
         public class black
         {
@@ -245,16 +390,16 @@ namespace Шахматы
                 figure[] pawn = new figure[8];
                 for (int i = 0; i < 8; i++)
                 {
-                    pawn[i] = new figure(imgs.pawn, "pawn", "black");
+                    pawn[i] = new figure(imgs.pawn, "pawn", false);
                 }
                 return pawn;
             }
             static public figure[] pawn = pawnPrep();
-            static public figure[] bishop = { new figure(imgs.bishop, "bishop", "black"), new figure(imgs.bishop, "bishop", "black") };
-            static public figure[] knight = { new figure(imgs.knight, "knight", "black"), new figure(imgs.knight, "knight", "black") };
-            static public figure[] castle = { new figure(imgs.castle, "castle", "black"), new figure(imgs.castle, "castle", "black") };
-            static public figure queen = new figure(imgs.queen, "queen", "black");
-            static public figure king = new figure(imgs.king, "king", "black");
+            static public figure[] bishop = { new figure(imgs.bishop, "bishop", false), new figure(imgs.bishop, "bishop", false) };
+            static public figure[] knight = { new figure(imgs.knight, "knight", false), new figure(imgs.knight, "knight", false) };
+            static public figure[] castle = { new figure(imgs.castle, "castle", false), new figure(imgs.castle, "castle", false) };
+            static public figure queen = new figure(imgs.queen, "queen", false);
+            static public figure king = new figure(imgs.king, "king", false);
         }
 
         static BitmapImage BitmapToImageSource(Bitmap bitmap)
@@ -279,59 +424,53 @@ namespace Шахматы
             gr = grid;
             for (int i = 0; i < 8; i++)
             {
-                gr.Children.Add(black.pawn[i]);
-                gr.Children.Add(white.pawn[i]);
-                setPos(black.pawn[i], new int[] { i + 1, 2 });
-                setPos(white.pawn[i], new int[] { i + 1, 7 });
+                setPos(black.pawn[i], new int[] { i + 1, 2 }, false);
+                setPos(white.pawn[i], new int[] { i + 1, 7 }, false);
             }
-            for (int i = 0; i < 2; i++)
-            {
-                gr.Children.Add(black.castle[i]);
-                gr.Children.Add(black.knight[i]);
-                gr.Children.Add(black.bishop[i]);
-                gr.Children.Add(white.castle[i]);
-                gr.Children.Add(white.knight[i]);
-                gr.Children.Add(white.bishop[i]);
-            }
-            gr.Children.Add(white.queen);
-            gr.Children.Add(white.king);
-            gr.Children.Add(black.queen);
-            gr.Children.Add(black.king);
 
-            setPos(black.castle[0], new int[] { 1, 1 });
-            setPos(black.castle[1], new int[] { 8, 1 });
-            setPos(black.knight[0], new int[] { 2, 1 });
-            setPos(black.knight[1], new int[] { 7, 1 });
-            setPos(black.bishop[0], new int[] { 3, 1 });
-            setPos(black.bishop[1], new int[] { 6, 1 });
-            setPos(black.king, new int[] { 5, 1 });
-            setPos(black.queen, new int[] { 4, 1 });
+            setPos(black.castle[0], new int[] { 1, 1 }, false);
+            setPos(black.castle[1], new int[] { 8, 1 }, false);
+            setPos(black.knight[0], new int[] { 2, 1 }, false);
+            setPos(black.knight[1], new int[] { 7, 1 }, false);
+            setPos(black.bishop[0], new int[] { 3, 1 }, false);
+            setPos(black.bishop[1], new int[] { 6, 1 }, false);
+            setPos(black.king, new int[] { 5, 1 }, false);
+            setPos(black.queen, new int[] { 4, 1 }, false);
 
-            setPos(white.castle[0], new int[] { 1, 8 });
-            setPos(white.castle[1], new int[] { 8, 8 });
-            setPos(white.knight[0], new int[] { 2, 8 });
-            setPos(white.knight[1], new int[] { 7, 8 });
-            setPos(white.bishop[0], new int[] { 3, 8 });
-            setPos(white.bishop[1], new int[] { 6, 8 });
-            setPos(white.king, new int[] { 5, 8 });
-            setPos(white.queen, new int[] { 4, 8 });
+            setPos(white.castle[0], new int[] { 1, 8 }, false);
+            setPos(white.castle[1], new int[] { 8, 8 }, false);
+            setPos(white.knight[0], new int[] { 2, 8 }, false);
+            setPos(white.knight[1], new int[] { 7, 8 }, false);
+            setPos(white.bishop[0], new int[] { 3, 8 }, false);
+            setPos(white.bishop[1], new int[] { 6, 8 }, false);
+            setPos(white.king, new int[] { 5, 8 }, false);
+            setPos(white.queen, new int[] { 4, 8 }, false);
         }
 
-        public void setPos(figure Figure, int[] coord)
+        public void setPos(figure Figure, int[] coord, bool posChange = true)
         {
+            if(posChange)
+            {
+                int[] oldCoord = getPos(Figure);
+                GameLogic.gl.figPosAr[oldCoord[0], oldCoord[1]] = null;
+            }
+            else
+            {
+                gr.Children.Add(Figure);
+            }
             Grid.SetColumn(Figure, coord[0]);
             Grid.SetRow(Figure, coord[1]);
-            Figure.position = coord;
+            GameLogic.gl.figPosAr[coord[0], coord[1]] = Figure;
         }
 
-        public figure getFigFromPos(int[] coord)
-        {
-            foreach (figure s in GameLogic.gl.figlist)
-            {
-                if (s.position[0] == coord[0] && s.position[1] == coord[1]) return s;
-            }
-            return null;
-        }
+        //public figure getFigFromPos(int[] coord)
+        //{
+        //    foreach (figure s in GameLogic.gl.figlist)
+        //    {
+        //        if (s.position[0] == coord[0] && s.position[1] == coord[1]) return s;
+        //    }
+        //    return null;
+        //}
 
         public int[] getPos(Image figure)
         {
