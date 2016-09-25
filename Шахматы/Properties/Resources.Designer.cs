@@ -61,6 +61,15 @@ namespace Шахматы.Properties {
         }
         
         /// <summary>
+        ///   Поиск локализованного ресурса типа System.IO.UnmanagedMemoryStream, аналогичного System.IO.MemoryStream.
+        /// </summary>
+        public static System.IO.UnmanagedMemoryStream stroke1 {
+            get {
+                return ResourceManager.GetStream("stroke1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap БКонь {

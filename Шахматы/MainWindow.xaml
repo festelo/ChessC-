@@ -5,24 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Шахматы"
         mc:Ignorable="d"
-        Title="MainWindow" Height="149.766" Width="130.533">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-        </Grid.RowDefinitions>
-        <!-- Устанавливаем три столбца -->
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
-        </Grid.ColumnDefinitions>
-        <TextBlock x:Name="textBlock" HorizontalAlignment="Left" Margin="3,0,0,0" TextWrapping="Wrap" Text="Выберите цвет:" VerticalAlignment="Top" Height="24" Width="120" Grid.ColumnSpan="2"/>
-        <RadioButton x:Name="radioButton" Content="Черные" HorizontalAlignment="Left" Margin="0,4,0,0" Grid.Row="1" VerticalAlignment="Top" Grid.ColumnSpan="2" Width="123"/>
-        <RadioButton x:Name="radioButton_Copy" Content="Белые" HorizontalAlignment="Left" Margin="0,4,0,0" Grid.Row="2" VerticalAlignment="Top" Grid.ColumnSpan="2" Width="123"/>
-        <Button x:Name="button" Grid.ColumnSpan="2" Content="Let's Go" HorizontalAlignment="Left" Margin="0,18,0,0" Grid.Row="4" VerticalAlignment="Top" Width="123" Grid.RowSpan="2" Click="button_Click"/>
-    </Grid>
+        Title="MainWindow" Width="130.533" SizeToContent="Height" >
+    <StackPanel>
+        <Expander x:Name="expander" Header="Online" IsExpanded="False" Expanded="expander_Expanded" Collapsed="expander_Expanded">
+            <StackPanel HorizontalAlignment="Left" Width="120">
+                <TextBlock x:Name="textBlockID" HorizontalAlignment="Left" Margin="3,0,-3,0" TextWrapping="Wrap" Text="Получение ID..." VerticalAlignment="Top" Height="18" Width="120"/>
+                <Separator Height="6"/>
+                <TextBlock x:Name="textBlock" HorizontalAlignment="Left" Margin="3,0,0,0" TextWrapping="Wrap" Text="Выберите цвет:" VerticalAlignment="Top" Height="18" Width="120" Grid.ColumnSpan="2"/>
+                <RadioButton x:Name="radioButton" Content="Черные" HorizontalAlignment="Left"  VerticalAlignment="Top" Grid.ColumnSpan="2" Width="123" IsChecked="True"/>
+                <RadioButton x:Name="radioButton_Copy" Content="Белые" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.ColumnSpan="2" Width="123"/>
+                <TextBox x:Name="textBox" Height="22" TextWrapping="Wrap" Text="" ToolTip="Введите IP"/>
+            </StackPanel>
+        </Expander>
+        <Button x:Name="button" Content="Let's Go" HorizontalAlignment="Left"  VerticalAlignment="Top" Width="123" Click="button_Click" Height="19"/>
+    </StackPanel>
 </Window>
