@@ -7,6 +7,8 @@ using Resource = Шахматы.Properties.Resources;
 using Bitmap = System.Drawing.Bitmap;
 using System.IO;
 using System.Media;
+using System;
+using System.Linq;
 
 namespace Шахматы
 {
@@ -23,6 +25,8 @@ namespace Шахматы
 
     public class StrokeData
     {
+        public bool CustomDeath = false;
+        public object oldOther = null;
 
         public int DeathX = -1;
         public int DeathY = -1;
@@ -87,24 +91,9 @@ namespace Шахматы
         {
             int clrnum = 0;
             if (!fig.color) clrnum = 1;
-            if (fig.type == "queen")
-            {
-
-                fig.Height = 20;
-                fig.Width = 20;
-                GR[clrnum].Children.Add(fig); Grid.SetColumn(fig, 4); Grid.SetRow(fig, 0);
-            }
-            else if (fig.type != "pawn")
-            {
-                fig.Height = 20;
-                fig.Width = 20;
-                for (int i = 0; i < 3; i++)
-                {
-                    if (types[clrnum, i] == null) { types[clrnum, i] = fig.type; GR[clrnum].Children.Add(fig); Grid.SetColumn(fig, i); Grid.SetRow(fig, 0); break; }
-                    if (types[clrnum, i] == fig.type) { GR[clrnum].Children.Add(fig); Grid.SetColumn(fig, i); Grid.SetRow(fig, 1); break; }
-                }
-            }
-            else
+            Type t = null;
+            if(fig.other != null) t = fig.other.GetType();
+            if (fig.type == "pawn" || (t != null && t.Equals(typeof(string)) && (string)fig.other == "pawn"))
             {
                 fig.Height = 10;
                 fig.Width = 10;
@@ -114,6 +103,23 @@ namespace Шахматы
                 if (pawnY[clrnum] == 1) pawnY[clrnum] = 0;
                 else { pawnY[clrnum] = 1; pawnX[clrnum]--; }
             }
+            else if (fig.type == "queen")
+            {
+
+                fig.Height = 20;
+                fig.Width = 20;
+                GR[clrnum].Children.Add(fig); Grid.SetColumn(fig, 4); Grid.SetRow(fig, 0);
+            }
+            else
+            {
+                fig.Height = 20;
+                fig.Width = 20;
+                for (int i = 0; i < 3; i++)
+                {
+                    if (types[clrnum, i] == null) { types[clrnum, i] = fig.type; GR[clrnum].Children.Add(fig); Grid.SetColumn(fig, i); Grid.SetRow(fig, 0); break; }
+                    if (types[clrnum, i] == fig.type) { GR[clrnum].Children.Add(fig); Grid.SetColumn(fig, i); Grid.SetRow(fig, 1); break; }
+                }
+            }
         }
 
         public void Remove(figure fig)
@@ -122,7 +128,7 @@ namespace Шахматы
             if (!fig.color) clrnum = 1;
             fig.Height = 80;
             fig.Width = 80;
-            if (fig.type == "pawn")
+            if (fig.type == "pawn" || (string)fig.other == "pawn")
             {
                 if (pawnY[clrnum] == 0) pawnY[clrnum] = 1;
                 else { pawnY[clrnum] = 0; pawnX[clrnum]++; }
@@ -239,7 +245,7 @@ namespace Шахматы
             static public figure king = new figure(imgs.king, "king", false);
         }
 
-        static BitmapImage BitmapToImageSource(Bitmap bitmap)
+        public static BitmapImage BitmapToImageSource(Bitmap bitmap)
         {
             using (MemoryStream memory = new MemoryStream())
             {
@@ -255,48 +261,50 @@ namespace Шахматы
             }
         }
 
+        public static int[] ArrayInv = { -1, 8, 7, 6, 5, 4, 3, 2, 1};
+        public bool inverted = false;
+
         Grid gr = null;
         public chess(Grid grid)
         {
             gr = grid;
             for (int i = 0; i < 8; i++)
             {
-                setPos(black.pawn[i], new int[] { i + 1, 2 }, false);
-                setPos(white.pawn[i], new int[] { i + 1, 7 }, false);
+                setPos(black.pawn[i], new int[] { i + 1, 2 },  gr, false);
+                setPos(white.pawn[i], new int[] { i + 1, 7 },  gr, false);
             }
 
-            setPos(black.castle[0], new int[] { 1, 1 }, false);
-            setPos(black.castle[1], new int[] { 8, 1 }, false);
-            setPos(black.knight[0], new int[] { 2, 1 }, false);
-            setPos(black.knight[1], new int[] { 7, 1 }, false);
-            setPos(black.bishop[0], new int[] { 3, 1 }, false);
-            setPos(black.bishop[1], new int[] { 6, 1 }, false);
-            setPos(black.king, new int[] { 5, 1 }, false);
-            setPos(black.queen, new int[] { 4, 1 }, false);
+            setPos(black.castle[0], new int[] { 1, 1 },  gr, false);
+            setPos(black.castle[1], new int[] { 8, 1 },  gr, false);
+            setPos(black.knight[0], new int[] { 2, 1 },  gr, false);
+            setPos(black.knight[1], new int[] { 7, 1 },  gr, false);
+            setPos(black.bishop[0], new int[] { 3, 1 },  gr, false);
+            setPos(black.bishop[1], new int[] { 6, 1 },  gr, false);
+            setPos(black.king, new int[] { 5, 1 },  gr, false);
+            setPos(black.queen, new int[] { 4, 1 },  gr, false);
 
-            setPos(white.castle[0], new int[] { 1, 8 }, false);
-            setPos(white.castle[1], new int[] { 8, 8 }, false);
-            setPos(white.knight[0], new int[] { 2, 8 }, false);
-            setPos(white.knight[1], new int[] { 7, 8 }, false);
-            setPos(white.bishop[0], new int[] { 3, 8 }, false);
-            setPos(white.bishop[1], new int[] { 6, 8 }, false);
-            setPos(white.king, new int[] { 5, 8 }, false);
-            setPos(white.queen, new int[] { 4, 8 }, false);
+            setPos(white.castle[0], new int[] { 1, 8 }, gr, false);
+            setPos(white.castle[1], new int[] { 8, 8 }, gr, false);
+            setPos(white.knight[0], new int[] { 2, 8 }, gr, false);
+            setPos(white.knight[1], new int[] { 7, 8 }, gr, false);
+            setPos(white.bishop[0], new int[] { 3, 8 }, gr, false);
+            setPos(white.bishop[1], new int[] { 6, 8 }, gr, false);
+            setPos(white.king, new int[] { 5, 8 }, gr, false);
+            setPos(white.queen, new int[] { 4, 8 }, gr, false);
         }
 
-        public void setPos(figure Figure, int[] coord, bool posChange = true)
+        static SoundPlayer sp = new SoundPlayer(Resource.stroke1);
+        static public void setPos(figure Figure, int[] coord, Grid gr, bool posChange = true, bool other = true)
         {
             if (posChange)
             {
-                int[] oldCoord = getPos(Figure);
+                int[] oldCoord = getPos(Figure, gr);
                 GameLogic.gl.figPosAr[oldCoord[0], oldCoord[1]] = null;
-                SoundPlayer sp = new SoundPlayer();
-                sp.Stream = Resource.stroke1;
-                sp.Play();
+                if (other) sp.Play();
             }
             else
             {
-                gr.Children.Add(Figure);
+                if (other) gr.Children.Add(Figure);
             }
             Grid.SetColumn(Figure, coord[0]);
             Grid.SetRow(Figure, coord[1]);
@@ -304,10 +312,67 @@ namespace Шахматы
         }
 
 
-        public int[] getPos(Image figure)
+
+        static public int[] getPos(Image figure, Grid gr)
         {
             int[] coord = { Grid.GetColumn(figure), Grid.GetRow(figure) };
             return coord;
+        }
+
+        static public void Invert(List<figure> figList, Grid gr, figure[,] figPosAr)
+        {
+            foreach (figure s in figList)
+            {
+                int[] posOld = getPos(s, gr);
+                if(figPosAr[posOld[0], posOld[1]] == s)
+                    setPos(s, new int[] { posOld[0], ArrayInv[posOld[1]] }, gr, true, false);
+                else
+                    setPos(s, new int[] { posOld[0], ArrayInv[posOld[1]] }, gr, false, false);
+            }
+        }
+
+        static public void PawnTrans(figure fig, int num)
+        {
+            switch (num)
+            {
+                case 0:
+                    {
+                        fig.type = "knight";
+                        if (fig.color)
+                            fig.Source = white.imgs.knight;
+                        else
+                            fig.Source = black.imgs.knight;
+                        break;
+                    }
+                case 1:
+                    {
+                        fig.type = "queen";
+                        if (fig.color)
+                            fig.Source = white.imgs.queen;
+                        else
+                            fig.Source = black.imgs.queen;
+                        break;
+                    }
+                case 2:
+                    {
+                        fig.type = "castle";
+                        if (fig.color)
+                            fig.Source = chess.white.imgs.castle;
+                        else
+                            fig.Source = chess.black.imgs.castle;
+                        break;
+                    }
+                case 3:
+                    {
+                        fig.type = "bishop";
+                        if (fig.color)
+                            fig.Source = chess.white.imgs.bishop;
+                        else
+                            fig.Source = chess.black.imgs.bishop;
+                        break;
+                    }
+            }
+            fig.other = "pawn";
         }
     }
 }

@@ -196,21 +196,21 @@ namespace Шахматы
 
 
 
-    public class GameWindow
+    public class GameWindow : Window
     {
         public GameWindow(bool gamecolor, Socket online = null, bool host = false)
         {
-            Window win = new Window();
-            win.ResizeMode = ResizeMode.CanMinimize;
-            win.SizeToContent = SizeToContent.WidthAndHeight;
-            RenderOptions.SetBitmapScalingMode(win, BitmapScalingMode.HighQuality);
+            ResizeMode = ResizeMode.CanMinimize;
+            SizeToContent = SizeToContent.WidthAndHeight;
+            RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.HighQuality);
             Grid gr = new Grid();
-            GameLogic gl = new GameLogic(gr, gamecolor, online, host);
+            if (host) VerticalAlignment = VerticalAlignment.Top;
+            else VerticalAlignment = VerticalAlignment.Bottom;
+            GameLogic gl = new GameLogic(gr, gamecolor, this, online, host);
             //gr.Height = 700;
             //gr.Width = 700;
             //win.Show();
             gr.HorizontalAlignment = HorizontalAlignment.Left;
-            gr.VerticalAlignment = VerticalAlignment.Top;
             char code = '\u0041';
             for (int i = 0; i < 9; i++)
             {
@@ -267,8 +267,8 @@ namespace Шахматы
                 tableColor = !tableColor;
             }
 
-            win.Content = gr;
-            win.Show();
+            Content = gr;
+            Show();
         }
     }
 
